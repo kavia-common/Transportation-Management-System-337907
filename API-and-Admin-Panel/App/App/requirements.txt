@@ -1,28 +1,19 @@
-appdirs==1.4.3
-astroid==2.3.2
-certifi==2024.7.4
-Click==7.0
-distlib==0.3.0
-filelock==3.0.12
+# Core Flask framework
 Flask==2.2.5
 Flask-Cors==5.0.0
 Flask-Login==0.5.0
-Flask-MySQL==1.5.1
-Flask-MySQLdb==0.2.0
 Flask-WTF==0.14.3
-isort==4.3.21
-itsdangerous==1.1.0
-Jinja2==3.1.5
-lazy-object-proxy==1.4.3
-MarkupSafe==1.1.1
-mccabe==0.6.1
-mod-wsgi==4.9.3
-mod-wsgi-httpd==2.4.41.1
-mysqlclient==1.4.6
-pylint==2.4.3
-PyMySQL==1.1.1
-six==1.12.0
-virtualenv==20.26.6
 Werkzeug==3.0.6
-wrapt==1.11.2
+
+# Template engine
+Jinja2==3.1.5
+MarkupSafe==1.1.1
+
+# Utilities
+Click==7.0
+itsdangerous==1.1.0
 WTForms==2.2.1
+six==1.12.0
+
+# Testing
+pytest==8.3.4

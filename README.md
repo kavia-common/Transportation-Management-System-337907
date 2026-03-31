@@ -1,60 +1,163 @@
-This project won the first prize of [Napier University Group Project Awards](https://www.napier.ac.uk/about-us/our-schools/school-of-computing/student-stories/computershare-awards-2020).
-
 # Transportation Management System
 
-This project is a full-suite for a delivery company. It includes:
+A full-suite transportation management system for delivery companies, including a Flask-based web server (API + Admin Panel + Customer website) backed by SQLite (for local development) and an Android driver app.
 
- - Customers website: general information about the company and parcel tracking option
- - Admin Panel: allows an admin user to manage the entire database in a user-firendly environment and also provide business oriented applications (revenue and spendings overview, jobs and drivers assignments and management...)
- - Drivers App: android application that allows drivers to see the jobs and vehicle assigned to them, mark jobs as completed, request for a customer signature, upload receipts and parcel pictures to the server, etc.
- - API: the pivotal element that connects and makes the three above services work
+## Quick Start (Local Development)
 
-### 0. Web Server
+### Prerequisites
+- Python 3.8+
 
-The web server uses *Python FLASK*. The API, Admin Panel and Customer's Website are therefore flask applications.  
-The whole setup uses Blueprints to separate the three areas. A main app is initiated, and sub-apps (api, admin panel and customer websites) are inititated within the main App.  
-*Python* is used as server-side language.
+### Setup & Run
 
-[See App.py setup and blueprints registration here](https://github.com/musevarg/Transportation-Management-System/blob/master/API-and-Admin-Panel/App/App/App.py).
+```bash
+cd API-and-Admin-Panel/App/App
 
-### 1. API
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-The API is written in *Python* and *SQL*.
+# Install dependencies
+pip install -r requirements.txt
 
-The API is used to fetch, update and remove content from the database. It returns JSON responses and handles GET, POST, PUT and DELETE methods.
+# Run the application
+python App.py
+```
 
-[See API code here](https://github.com/musevarg/Transportation-Management-System/blob/master/API-and-Admin-Panel/App/App/API/RestAPI.py).
+The application will:
+1. Create a SQLite database (`tms.db`) automatically
+2. Seed it with demo data (admins, drivers, vehicles, customers, jobs, shipments, routes)
+3. Start the server on http://localhost:3001
 
-Below is a sample output for each request method:
-![](https://raw.githubusercontent.com/musevarg/Transportation-Management-System/master/pic1.png)
+### Access Points
+| URL | Description |
+|-----|-------------|
+| http://localhost:3001/ | Customer Website (redirects to /home) |
+| http://localhost:3001/home | Customer Landing Page with Tracking |
+| http://localhost:3001/admin | Admin Panel Login |
+| http://localhost:3001/api/ | REST API Root |
+| http://localhost:3001/api-docs | API Documentation |
+| http://localhost:3001/healthz | Health Check |
 
-### 2. Admin Panel
+### Demo Credentials
+- **Admin Panel:** `admin` / `admin123`
+- **Driver Login (API):** `stevenjones` / `driver123`
 
-The admin panel allows an admin user to update the MySQL database. The admin can add, remove and amend records.
+---
 
-It is developed using *HTML*, *CSS*, *JavaScript* and *jQuery* to perform API calls. It makes extensive use of bootstrap and the above API.
+## Architecture
 
-It also contains a dashboard screen that allows for the admin to check the monthly revenue and the monthly fees (fuel, lunch, MOT).
+### Components
+1. **Customer Website** (`/home`) - Public landing page with parcel tracking
+2. **Admin Panel** (`/admin`) - Dashboard for managing jobs, shipments, drivers, vehicles, routes
+3. **REST API** (`/api`) - RESTful endpoints for all CRUD operations
+4. **Android App** - Driver mobile app (separate project)
 
-[See Admin Panel code here](https://github.com/musevarg/Transportation-Management-System/tree/master/API-and-Admin-Panel/App/App/AdminPanel).
+### Database (SQLite)
+Tables: `Admins`, `Drivers`, `Vehicles`, `Customers`, `Locations`, `Jobs`, `Shipments`, `Routes`, `RouteStops`, `Receipts`
 
-![](https://raw.githubusercontent.com/musevarg/Transportation-Management-System/master/pic2.png)
+### Key Features
+- **Shipment Creation & Tracking**: Create shipments with auto-generated tracking numbers, track via tracking ID
+- **Status Transitions**: Validated flow: `Pending → In Transit → Delivered`
+- **Driver/Vehicle Assignment**: Assign drivers and vehicles to shipments
+- **Route Planning**: Create routes with multiple stops linked to shipments
+- **Dashboard**: Real-time statistics on jobs, shipments, drivers, and routes
 
-### 3. Android Application
+---
 
-The API allows for users authentication and also provides content to the native application.
-It allows for delivery drivers to log in and see what vehicle has been assigned to them, how many jobs have been assigned to them and allows them to mark a job as completed. This updates the status of the job in the database and uploads a picture of the parcel and the customer's signature.
-It also permits for uploading receipts. This content can be retrieved in the admin panel.
+## API Documentation
 
-[See Android App code here](https://github.com/musevarg/Transportation-Management-System/tree/master/Drivers-Android-App/app/src/main).
+### Endpoints Summary
 
-![](https://raw.githubusercontent.com/musevarg/Transportation-Management-System/master/pic3.png)
+#### Health & Docs
+- `GET /healthz` - Health check
+- `GET /api-docs` - Full API documentation
 
-### 4. Customers Website
+#### Jobs (Legacy)
+- `GET /api/jobs` - List all jobs
+- `POST /api/jobs` - Create a new job
+- `GET /api/jobs/<id>` - Get job details
+- `PUT /api/jobs/<id>` - Update job
+- `DELETE /api/jobs/<id>` - Delete job
+- `PUT /api/jobs/<id>/status` - Update job status (validated transitions)
+- `GET /api/jobs/pending` - List pending jobs
+- `GET /api/jobs/in-transit` - List in-transit jobs
+- `GET /api/jobs/delivered` - List delivered jobs
+- `GET /api/jobs/<trackingId>/location` - Track parcel location
+- `GET /api/jobs/full/<id>` - Full job with customer and locations
 
-This simple website gives information about the company and allows sutomers to track their parcel (the API is used for that).
+#### Shipments
+- `GET /api/shipments` - List all shipments
+- `POST /api/shipments` - Create a new shipment
+- `GET /api/shipments/<id>` - Get shipment details
+- `PUT /api/shipments/<id>/status` - Update shipment status
+- `PUT /api/shipments/<id>/assign` - Assign driver/vehicle
+- `GET /api/shipments/track/<tracking_number>` - Track by tracking number
 
-[See website code here](https://github.com/musevarg/Transportation-Management-System/tree/master/API-and-Admin-Panel/App/App/Website).
+#### Routes
+- `GET /api/routes` - List all routes
+- `POST /api/routes` - Create route with stops
+- `GET /api/routes/<id>` - Get route with stops
+- `PUT /api/routes/<id>/status` - Update route status
 
-Below is an example of a parcel being tracked:
-![](https://raw.githubusercontent.com/musevarg/Transportation-Management-System/master/pic4.png)
+#### Drivers, Vehicles, Customers, Locations, Receipts
+Standard CRUD: `GET /api/<resource>`, `POST`, `GET /<id>`, `PUT /<id>`, `DELETE /<id>`
+
+---
+
+## Demo Flow (Step-by-Step Video Recording)
+
+### 1. Health Check
+Navigate to `http://localhost:3001/healthz` → Shows system is running.
+
+### 2. API Documentation
+Navigate to `http://localhost:3001/api-docs` → Shows all available endpoints.
+
+### 3. Customer Website
+Navigate to `http://localhost:3001/home`:
+- Browse the landing page
+- Track a parcel using `AQ0325003` (In Transit) or `AQ0325001` (Delivered)
+- Try shipment tracking with any TMS-prefixed tracking number from the seed data
+
+### 4. Admin Panel
+Navigate to `http://localhost:3001/admin`:
+- Login with `admin` / `admin123`
+- View the dashboard with real-time statistics
+- Click **Shipments** → View all shipments with status badges
+- Click **Jobs** → Filter by Pending/In Transit/Delivered
+- Click **Routes** → View planned delivery routes
+- Click **Drivers** → View driver details and assignments
+- Click **Vehicles** → View fleet status
+- Create a new record in any table
+- Update a record's status
+
+### 5. Status Transition Demo
+Using the API (e.g., with curl):
+```bash
+# Move job from Pending to In Transit
+curl -X PUT "http://localhost:3001/api/jobs/4/status?Status=In%20Transit"
+
+# Move job from In Transit to Delivered
+curl -X PUT "http://localhost:3001/api/jobs/3/status?Status=Delivered"
+
+# Assign driver to shipment
+curl -X PUT "http://localhost:3001/api/shipments/3/assign?DriverID=1&VehicleID=1"
+
+# Create a new shipment
+curl -X POST "http://localhost:3001/api/shipments" \
+  -H "Content-Type: application/json" \
+  -d '{"SenderName":"Test","SenderCity":"London","ReceiverName":"Demo","ReceiverCity":"Manchester","Weight":5.0,"Description":"Demo package"}'
+```
+
+---
+
+## Production Readiness Suggestions
+1. **Authentication**: Replace plaintext passwords with hashed passwords (bcrypt)
+2. **Database**: Migrate from SQLite to PostgreSQL or MySQL for concurrent access
+3. **HTTPS**: Enable TLS/SSL for all endpoints
+4. **Rate Limiting**: Add API rate limiting to prevent abuse
+5. **Input Validation**: Add comprehensive input validation and sanitization
+6. **Logging**: Add structured logging with log aggregation
+7. **Monitoring**: Add Prometheus metrics and health check probes
+8. **CORS**: Configure CORS properly for production domains
+9. **Session Management**: Use Redis or database-backed sessions
+10. **Testing**: Add comprehensive unit and integration tests
